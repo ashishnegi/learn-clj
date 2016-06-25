@@ -65,4 +65,4 @@
 (draw-pattern + 200 200)
 
 ;; Awesomeness :)
-(draw-pattern * 400 400)
+(draw-pattern * 800 800)
