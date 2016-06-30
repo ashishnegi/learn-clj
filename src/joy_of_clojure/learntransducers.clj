@@ -14,7 +14,7 @@
   (fn [xf]
     (fn
       ([] (xf))
-      ([final-val] (prn final-val) (xf final-val))
+      ([final-val] (xf final-val))
       ([acc val] (if (pred val)
                    (xf acc val)
                    acc)))))
