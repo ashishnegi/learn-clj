@@ -18,8 +18,27 @@
     [v (gen/vector gen/int)]
     (let [fns (gen/sample (gen/elements [inc inc dec #(+ 3 %)]))
           core-transducer (apply comp (map #(map %) fns))
-          my-transducer (apply comp (map #(map %) fns))]
-      (= (transduce core-transducer + v)
-         (transduce my-transducer + v)))))
+          my-transducer (apply comp (map #(trans/map-transduce %) fns))]
+      (= (transduce core-transducer conj v)
+         (transduce my-transducer conj v)))))
 
 (tc/quick-check 100 map-transduce-rand-transducers-test)
+
+(def filter-transduce-even?-test
+  (prop/for-all
+    [v (gen/vector gen/int)]
+        (= (transduce (trans/filter-transduce even?) + v)
+           (transduce (filter even?) + v))))
+
+(tc/quick-check 100 filter-transduce-even?-test)
+
+(def filter-transduce-rand-transducers-test
+  (prop/for-all
+    [v (gen/vector gen/int)]
+    (let [fns (gen/sample (gen/elements [#(not= 0 (rem % 10)) #(not= 0 (rem % 35)) even? #(< % 0)]) 3)
+          core-transducer (apply comp (map #(filter %) fns))
+          my-transducer (apply comp (map #(trans/filter-transduce %) fns))]
+      (= (transduce core-transducer conj v)
+         (transduce my-transducer conj v)))))
+
+(tc/quick-check 100 filter-transduce-rand-transducers-test)

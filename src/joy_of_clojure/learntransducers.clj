@@ -5,6 +5,16 @@
   (fn [xf]
     (fn
       ([] (xf)) ;; delegate to inner transformer for initial value.
-      ([one] (xf one))    ;; final reduction after my reduction be delegated
-      ([one two] (xf one (f two))) ;; reducing over accumulaed and new value.
+      ([final-val] (xf final-val))    ;; final reduction after my reduction be delegated
+      ([acc val] (xf acc (f val))) ;; reducing over accumulaed and new value.
       )))
+
+(defn filter-transduce
+  [pred]
+  (fn [xf]
+    (fn
+      ([] (xf))
+      ([final-val] (prn final-val) (xf final-val))
+      ([acc val] (if (pred val)
+                   (xf acc val)
+                   acc)))))
