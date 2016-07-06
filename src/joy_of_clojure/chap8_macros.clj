@@ -1,4 +1,5 @@
-(ns joy-of-clojure.chap8-macros)
+(ns joy-of-clojure.chap8-macros
+  [:require [clojure.xml :as xml]])
 
 (macroexpand '(when true true))
 ;; => (if true (do true))
@@ -38,14 +39,78 @@
 ;;                    "A fierce, yet elusive creature"
 ;;                    [eats-goats]]))
 
-(defn mk-groupings [groups]
-  groups)
+(defn mk-comment [comments]
+  (when (not-empty comments)
+    {:comment (clojure.string/join "" comments)}))
+
+(defn mk-attrs [attrs]
+  (into {}
+        (mapv (fn [x]
+                [(keyword (first x)) (keyword (second x))]) attrs)))
+
+(defn mk-properties [props]
+  (mapv (fn [x]
+          {:tag :property
+           :attrs {:name (keyword (first x))}})
+        props))
+
+(defn mk-details [details]
+  (let [details-fn (fn [detail]
+                     {:tag :thing
+                      :attrs (merge {:name (keyword (first detail))}
+                                    (mk-attrs (take-while (comp not string?) (rest detail)))
+                                    (mk-comment (filter string? (rest detail))))
+                      :content [{:tag :properties
+                                 :content (mk-properties (drop-while (comp not vector?) detail))}]
+                      })]
+    (mapv details-fn details)))
+
+(defmacro grouping [type & details]
+  `{:tag :grouping
+    :attrs {:name (keyword '~type)}
+    :content [~@(mk-details details)]})
 
 (defmacro domain [name & body]
   `{:tag :domain
-    :attrs {:name "ash"}
-    :content [(mk-groupings ~@body)]})
+    :attrs {:name (keyword '~name)}
+    :content [~@body]})
 
-(domain man-vs-monster
-        [1])
-;; => {:content [[1]], :attrs {:name "ash"}, :tag :domain}
+(def d
+  (-> '(domain man-vs-monster
+               (grouping people
+                         (Human "A stock human")
+                         (Man (isa Human)
+                              "A man, baby"
+                              [name]
+                              [has-beard?]))
+               (grouping monsters
+                         (Chupacabra
+                           "A fierce, yet elusive creature"
+                           [eats-goats?])))
+      macroexpand
+      eval))
+;; => {:content [{:content [{:tag :thing, :attrs {:name :Human, :comment "A stock human"}, :content [{:tag :properties, :content []}]} {:tag :thing, :attrs {:name :Man, :isa :Human, :comment "A man, baby"}, :content [{:tag :properties, :content [{:tag :property, :attrs {:name :name}} {:tag :property, :attrs {:name :has-beard?}}]}]}], :attrs {:name :people}, :tag :grouping} {:content [{:tag :thing, :attrs {:name :Chupacabra, :comment "A fierce, yet elusive creature"}, :content [{:tag :properties, :content [{:tag :property, :attrs {:name :eats-goats?}}]}]}], :attrs {:name :monsters}, :tag :grouping}], :attrs {:name :man-vs-monster}, :tag :domain}
+
+(xml/emit d)
+;; <?xml version='1.0' encoding='UTF-8'?>
+;; <domain name=':man-vs-monster'>
+;; <grouping name=':people'>
+;; <thing name=':Human' comment='A stock human'>
+;; <properties>
+;; </properties>
+;; </thing>
+;; <thing name=':Man' isa=':Human' comment='A man, baby'>
+;; <properties>
+;; <property name=':name'/>
+;; <property name=':has-beard?'/>
+;; </properties>
+;; </thing>
+;; </grouping>
+;; <grouping name=':monsters'>
+;; <thing name=':Chupacabra' comment='A fierce, yet elusive creature'>
+;; <properties>
+;; <property name=':eats-goats?'/>
+;; </properties>
+;; </thing>
+;; </grouping>
+;; </domain>
