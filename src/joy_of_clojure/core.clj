@@ -92,6 +92,15 @@
 ;;            : with side-effects its bad; should evaluate completly before leaving binding form.
 ;;            : `binding-fn` put things in same thread binding form as where it was written.
 ;;    usage : vars > atom > agent / ref
+;;15. parallelism:
+;;    `future` and `promise`
+;;     future : evaluates expression in another thread.
+;;            : future, future-cancel, future-done?, future-cancelled?
+;;     promise: delivered by somebody (thread) else.
+;;            : write once; again write => exception.
+;;    `pvalues` : lazy-seq of parallel execution of expressions with sliding window.
+;;    `pmap` : parallel map
+;;    `pcalls`: lazy-seq of parallel exectuion of functions in sliding window.
 
 ;; To do
 ;; 1. What is symbol keys ? => symbols like 'a can be used as keys
