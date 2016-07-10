@@ -62,6 +62,36 @@
 ;;
 ;;    Argument order independence : use (defn foo [& {:keys [a b c d]}] [a b c d])
 ;;    => (foo :a 1 :c 3 :b 2) => [1 2 3 nil]
+;;14. Concurrency :
+;;    `ref` : coordinated, synchronous, retriable
+;;    `agents` : uncoordinated, asynchronous
+;;    `atom` : uncoordinated, synchronous, retriable
+;;    `vars` : thread-local, dynamic
+;;    coordinated : transaction support while changing multiple; either all or none.
+;;
+;;    `validator-fn` : validate the chagne in value.
+;;    clojure has one transaction per thread at a time.
+;;        retry of sub-transaction causes retry of outermost.
+;;    `io!` : checks if io is in some transaction.
+;;   `commute` : for faster commutative transaction.
+;;
+;;    stm : `dosync` : change multiple refs or agents;
+;;        atoms in dosync will not be reset during retries; fns may be called multiple times.
+;;
+;;    ref : alter, commute
+;;    agent : have queue for fns to change val ; runs in one thread at a time.
+;;          : send uses thread from thread-pool; use send for non-blocking fns;
+;;                 agent puts itself in thread-wait queue to get thread. good for cpu-tasks
+;;          : send-off uses thread from unbounded-pool. good for IO
+;;          : erlang style : but with in-process immutable data sharing;
+;;          : :fail, :continue, agent-error, set-error-handler!, restart-agent, set-error-model!
+;;    vars : unlike other reference objects evaluate to themselves.
+;;         : to get the symbol use `var`.
+;;         : binding uses stack for latest values (per thread basis).
+;;    binding : laziness and binding does not go hand in hand.
+;;            : with side-effects its bad; should evaluate completly before leaving binding form.
+;;            : `binding-fn` put things in same thread binding form as where it was written.
+;;    usage : vars > atom > agent / ref
 
 ;; To do
 ;; 1. What is symbol keys ? => symbols like 'a can be used as keys
