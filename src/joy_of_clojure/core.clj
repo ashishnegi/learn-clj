@@ -101,7 +101,29 @@
 ;;    `pvalues` : lazy-seq of parallel execution of expressions with sliding window.
 ;;    `pmap` : parallel map
 ;;    `pcalls`: lazy-seq of parallel exectuion of functions in sliding window.
+;;16. `proxy` : class on demand : proxing methods that can be changed dynamically.
+;;            : construct-proxy, init-proxy, get-proxy-class
+;;            : can not be extended further.. use `gen-class`
+;;17. primitive-arrays : `into-array` arary of same value types.
+;;           : `char-array`, `byte-arary`, `object-array` etc.
+;;           : these arrays are mutable , do not share.
+;;           : `to-array`, `to-array-2d` are autoboxed.
+;;           : creating seq and then sharing is ok as no way to get back the array to change.
+;;           : `[B` : primitive byte array, `[I` primitive int array. etc.
+;;18. Clojure functions implement Callable, Comparator, Runnable.
+;;     : can pass clojure-fns as java-fns, can pass in comparison (<, >) , can pass to threads.
+;;19. Clojure data-structures implement:
+;;     : sequential colls conform to immutable parts of `java.util.List`.
+;;     : vectors implement Comparable and RandomAccess : compare itself to other
+;;                                        and for optimized algos respectively.
+;;20. `definterfaces` : primitive hints are supported in arguments and return value.
+;;21. Exceptions and Errors : `RuntimeException` and `StackOverflowError`.
+;;      error when can not continue.
+;;      exception when may or may not continue.
+;;    Macros throw compile time exception.
+;;      `ex-data` and `ex-info` can be used for more information other than stack-trace. ExceptionInfo.
 
+;;
 ;; To do
 ;; 1. What is symbol keys ? => symbols like 'a can be used as keys
 ;; 2.
