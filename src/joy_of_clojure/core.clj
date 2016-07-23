@@ -122,6 +122,30 @@
 ;;      exception when may or may not continue.
 ;;    Macros throw compile time exception.
 ;;      `ex-data` and `ex-info` can be used for more information other than stack-trace. ExceptionInfo.
+;;22. Code as Code, Data as Data : Easiness to access data from code, keeping information, no PLOP.
+;;    Data as Data : Immutable data -> information, regeneration, reasonable, sharable.
+;;                 : Flatness, easy Simulation testing.
+;;                 : Edn : tagged literals : `*data-readers*`, `read-string`, `*default-data-reader-fn*`.
+;;   Data as Code  : Input in data form derives the behavior of app.
+;;                 : data-programmable engine.
+;;                 : event driven system : event as data -> persisted -> replayed to generate state.
+;;                     : essential-state : direct mapping in event model.
+;;                     : derived-state   : mapping created from code. (change/versioning is problem)
+;;  Code as Data as Code : Macros : Take code and process them as data and spit out more code.
+;;                 : Write DSL for your problem domain.
+;;23. Performance :
+;;       Type hints : for classes and not for primitives. ^floats, ^ints, ^longs
+;;            : arguments and return in function declration as well in calling.
+;;       Transients : `transient` , `conj!`, `persistent`. Mutating thread only view.
+;;       Chunked Seqs : reducing the cost of lazyness. 32 chunks are created at a time.
+;;            : created 1-at-a-time with `cons` and `lazy-seq`.
+;;       Memoization : `memoize`. but need to create our own `atom` cache if need more flexibility.
+;;       Coercion : primitives casting using `(long x)`,
+;;                : happens automatically if used in fn-argument ^long.
+;;                : `*unchecked-math*` : true => fast but wrong result : negative factorials..
+;;                : use `double` => fast but less accuracy.
+;;                : auto-promotion : use `+'` ' functions => little slow but accurate. (BigInt)
+;;      Reducers (Reducible transformers) / Transducers / parallel fold.
 
 ;;
 ;; To do
