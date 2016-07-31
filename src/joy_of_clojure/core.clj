@@ -154,10 +154,8 @@
 ;;        and shape of a solution is to explore its fundamental expectations.
 ;;
 ;;        Observer pattern : add-watch to refs.
-
-
-
-
+;;    `^:dynamic` vars can be binded so as to give more generic error-handling.
+;;
 
 ;;
 ;; To do

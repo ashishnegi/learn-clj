@@ -53,3 +53,9 @@
 ;; joy-of-clojure.learntransducers> (time (reduce + 0 (take 100500 v)))
 ;; "Elapsed time: 14.029671 msecs"
 ;; 5050074750
+
+
+;; stateful transducers
+(def xf (comp (map inc) (take 10)))
+(time (transduce xf + (range)))
+;; => 55

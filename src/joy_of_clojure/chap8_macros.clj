@@ -114,3 +114,13 @@
 ;; </thing>
 ;; </grouping>
 ;; </domain>
+
+
+(defmacro contextual-eval [ctx expr]
+  (eval
+    `(let [~@(mapcat (fn [[k v]]
+                       [k v])
+                     ctx)]
+       ~expr)))
+
+(contextual-eval {a 1 b (range)} (apply + a (take 10 b)))
