@@ -146,6 +146,18 @@
 ;;                : use `double` => fast but less accuracy.
 ;;                : auto-promotion : use `+'` ' functions => little slow but accurate. (BigInt)
 ;;      Reducers (Reducible transformers) / Transducers / parallel fold.
+;;24. Way of Thinking:
+;;        Planning, interaction with domain experts and potential users, and
+;;        deep thinking must come before testing begins. No amount of testing
+;;        can substitute for thoroughly thinking through the implications of
+;;        potential designs. One interesting way to tease out the requirements
+;;        and shape of a solution is to explore its fundamental expectations.
+;;
+;;        Observer pattern : add-watch to refs.
+
+
+
+
 
 ;;
 ;; To do
