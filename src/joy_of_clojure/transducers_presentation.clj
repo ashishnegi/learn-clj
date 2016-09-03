@@ -25,6 +25,8 @@
                    (filter even?)
                    (reduce +)))
 ;; => (reduce + (filter even? (map inc (range 1 100))))
+;; ^^^ Notice that filter/map are called with 2 arities..
+;; they do not support 1 arity (before transducer came.)
 
 ;; so.. what happens if data now comes from a channel.
 (def my-chan (async/chan 100)) ;; buffer of 100
@@ -35,8 +37,10 @@
     (recur (inc i))))
 ;; => #object[clojure.core.async.impl.channels.ManyToManyChannel 0xb158039 "clojure.core.async.impl.channels.ManyToManyChannel@b158039"]
 
-;; so now we can do ..
-(->> my-chan
+;; so now we can do ?? ..
+(->> my-chan  ;; Why i am passing channel here is just to show that
+     ;; earlier with no map-transducer channel could not be
+     ;; directly used by transducers.
      (map inc)
      (filter even?)
      (reduce +))
@@ -75,7 +79,7 @@
 ;;           (dotimes [i size]
 ;;               (chunk-append b (f (.nth c i))))
 ;;           (chunk-cons (chunk b) (map f (chunk-rest s))))
-;;         (cons (f (first s)) (map f (rest s)))))))
+;;         (cons (f (first s)) (map f (rest s))))))) ;; <<<<<<<------- and also this `cons` is dependency.
 
 
 ;; So what can we do.. ??
@@ -161,18 +165,19 @@
   (let [f (xform rf)]
     (reduce f init-value source)))
 
+;; (my-transduce (map inc) + (range 1 100))
 ;; where will the init-value comes from ??
 (defn my-transduce [xform rf source]
   (let [f (xform rf)]
     (reduce f (f) source)))
 
 (defn my-map5
-  [f]
-  (fn [rf]
-    (fn
+  [f] ;; inc / dec ..
+  (fn [rf] ;; + / conj
+    (fn  ;; tranducer
       ([res val]
        (rf res (f val)))
-      ([] (rf)))))
+      ([] (rf))))) ;; generating initial value
 
 (my-transduce (my-map5 inc)
               +
@@ -217,10 +222,12 @@
     ;;      res)))
 
 ;; How this works with channels..
-(def chan-2 (async/chan 100 (my-filter-final even?)))
+(def chan-2 (async/chan 100 (my-filter-final even?))) ;; so this is where transducer/our-algorithm is passed
 ;; => #'joy-of-clojure.transducers-presentation/chan-2
 (async/onto-chan chan-2 (range 100))
 
+;; this is code for reduce / final value..
+;; alrogithm is already send to chan-2 during creation.
 (->> chan-2
      (async/into [])
      (async/<!!)
@@ -249,7 +256,15 @@
               +
               (range 5))
 
-;; => 9
+(transduce (comp (filter even?)
+                 (map inc))
+          +
+          (range 5))
+
+(->> (range 5)
+     (filter even?)
+     (map inc)
+     (reduce +))
 
 ;; ((comp f g) x) => (f (g x))
 ;; what is x in case of transducer ??
@@ -266,10 +281,10 @@
   )
 
 ;; concentrate on xform and rf
-(def filterxfc (filter even?))
-(def mapxfc (map inc))
+(def filterxfc (filter even?)) ;; f
+(def mapxfc (map inc)) ;; g
 
-(def xform (comp filterxfc mapxfc))
+(def xform (comp filterxfc mapxfc)) ;; (comp f g) ;; (f (g x)
 ;; => #'joy-of-clojure.transducers-presentation/rf
 (def rf +)
 ;; => #function[clojure.core/filter$fn--4808$fn--4809]
@@ -298,7 +313,7 @@
 
 ;; XX -- tranducers for more win .. -- XX
 ;; transducer are fast .. why ??
-;; because your whole algorithm is not compressed into one function..
+;; because your whole algorithm is now compressed into one function..
 ;; intermediate sequences are not constructed.. really big improvement..
 
 (let [v (range 10000)]
@@ -321,11 +336,12 @@
 
 ;; and NOTICE just change `->>` to `comp`
 ;; and done.. :) performance of 35 %..
-;; means less boxes..
+;; means less aws-boxes to monitor..
 
 ;; XX -- transducer are statefull.. what.. ? -- XX
 ;; otherwise how would `take` be implemented.. ?
 ;; because looping is not in our hand..
+;; see .. https://github.com/clojure/clojure/blob/master/src/clj/clojure/core.clj#L2834
 
 ;; for cleaning : at the end : we need 1-arity signature in tranducer also..
 ;; https://github.com/clojure/clojure/blob/master/src/clj/clojure/core.clj#L7045
