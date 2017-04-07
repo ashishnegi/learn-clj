@@ -6,4 +6,4 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/test.check "0.9.0"]
                  [org.clojure/core.logic "0.8.10"]
-                 [org.clojure/core.async "0.2.385"]])
+                 [org.clojure/core.async "0.3.442"]])
