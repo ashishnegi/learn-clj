@@ -175,3 +175,12 @@
 
 ;; https://github.com/clojure/core.async/blob/master/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L912
 ;; https://github.com/clojure/core.async/blob/master/src/main/clojure/clojure/core/async/impl/ioc_macros.clj#L935
+
+;; In compiler design, static single assignment form (often abbreviated as SSA form or simply SSA)
+;; is a property of an intermediate representation (IR), which requires that each variable is
+;; assigned exactly once, and every variable is defined before it is used.
+
+;; in joy-of-clojure
+;; lein trampoline run -m joy-of-clojure.ring-benchmark 1000 1000
+;; in pulsar
+;; lein trampoline run -m co.paralleluniverse.pulsar.examples.primitive-ring-benchmark 1000 1000
