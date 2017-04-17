@@ -65,56 +65,58 @@
     (async/go (async/>! ch (apply blocking-work args)))
     ch))
 
-(defn async-work1 [work-chan]
-  (let [out (async/chan)]
-    (async/go-loop []
-      (let [work (async/<! work-chan)
-            res (async/<! (blocking-async 1 work))]
-        (async/>! out res)
-        (recur)))
-    out))
+(do ;; Using do so that i can evaluate whole block in one command.. :P
+  (defn async-work1 [work-chan]
+    (let [out (async/chan)]
+      (async/go-loop []
+        (let [work (async/<! work-chan)
+              res (async/<! (blocking-async 1 work))]
+          (async/>! out res)
+          (recur)))
+      out))
 
-(defn test1 []
-  (let [work-ch (async/chan)
-        async-out1 (async-work1 work-ch)]
-    ;; async/>!! returns true means we are able to put.
-    (async/>!! work-ch 1)
-    (assert (= 2 (async/<!! async-out1)))
-    (async/>!! work-ch 2)
-    (assert (= 3 (async/<!! async-out1)))))
+  (defn test1 []
+    (let [work-ch (async/chan)
+          async-out1 (async-work1 work-ch)]
+      ;; async/>!! returns true means we are able to put.
+      (async/>!! work-ch 1)
+      (assert (= 2 (async/<!! async-out1)))
+      (async/>!! work-ch 2)
+      (assert (= 3 (async/<!! async-out1)))))
 
-(test1)
+  (test1))
 
 ;; Question :
 ;; what is wrong / or possibly go wrong in async-work1 ?
 ;; In real world, we spawn go routines (go-loops) for some requests,
 ;; but forget to clean them ..
 
-;; Pattern B : ALWAYS think about how will go routine stops ?
+;; Thought A : ALWAYS think about how will go routine stops ?
 
 ;; Here and usually in real world :
 ;; We want to stop when there is no more data in work-chan.
 
-(defn async-work2 [work-chan]
-  (let [out (async/chan)]
-    (async/go-loop []
-      (if-let [work (async/<! work-chan)] ;; nil means work-chan is closed.
-        (do
-          (async/>! out (async/<! (blocking-async 1 work)))
-          (recur))))
-    out))
+(do
+  (defn async-work2 [work-chan]
+    (let [out (async/chan)]
+      (async/go-loop []
+        (if-let [work (async/<! work-chan)] ;; nil means work-chan is closed.
+          (do
+            (async/>! out (async/<! (blocking-async 1 work)))
+            (recur))))
+      out))
 
-(defn test2 []
-  (let [work-ch (async/chan)
-        async-out2 (async-work2 work-ch)]
-    ;; async/>!! returns true means we are able to put.
-    (async/>!! work-ch 1)
-    (assert (= 2 (async/<!! async-out2)))
-    (async/>!! work-ch 2)
-    (assert (= 3 (async/<!! async-out2)))
-    (async/close! work-ch)))
+  (defn test2 []
+    (let [work-ch (async/chan)
+          async-out2 (async-work2 work-ch)]
+      ;; async/>!! returns true means we are able to put.
+      (async/>!! work-ch 1)
+      (assert (= 2 (async/<!! async-out2)))
+      (async/>!! work-ch 2)
+      (assert (= 3 (async/<!! async-out2)))
+      (async/close! work-ch)))
 
-(test2)
+  (test2))
 
 ;; Question :
 ;; What is another problem ?
@@ -128,34 +130,35 @@
 
 ;; Principle : Closing a channel is only way to tell that "work" is done..
 
-(defn async-work3 [work-chan]
-  (let [out (async/chan)]
-    (async/go-loop []
-      (if-let [work (async/<! work-chan)] ;; nil means work-chan is closed.
-        (do
-          (async/>! out (async/<! (blocking-async 1 work)))
-          (recur))
-        (async/close! out))) ;; close the out as well. if's else :P
-    out))
+(do
+  (defn async-work3 [work-chan]
+    (let [out (async/chan)]
+      (async/go-loop []
+        (if-let [work (async/<! work-chan)] ;; nil means work-chan is closed.
+          (do
+            (async/>! out (async/<! (blocking-async 1 work)))
+            (recur))
+          (async/close! out))) ;; close the out as well. if's else :P
+      out))
 
-(defn test3 []
-  (let [work-ch (async/chan)
-        async-out3 (async-work3 work-ch)]
-    ;; async/>!! returns true means we are able to put.
-    (async/>!! work-ch 1)
-    (assert (= 2 (async/<!! async-out3)))
-    (async/>!! work-ch 2)
-    (assert (= 3 (async/<!! async-out3)))
-    (async/close! work-ch)
-    ;; check whether closing worker-channel closed out-channel ?
-    (assert (= nil (async/<!! async-out3)))
-    (assert (= false (async/>!! async-out3 1)))))
+  (defn test3 []
+    (let [work-ch (async/chan)
+          async-out3 (async-work3 work-ch)]
+      ;; async/>!! returns true means we are able to put.
+      (async/>!! work-ch 1)
+      (assert (= 2 (async/<!! async-out3)))
+      (async/>!! work-ch 2)
+      (assert (= 3 (async/<!! async-out3)))
+      (async/close! work-ch)
+      ;; check whether closing worker-channel closed out-channel ?
+      (assert (= nil (async/<!! async-out3)))
+      (assert (= false (async/>!! async-out3 1)))))
 
-(test3)
+  (test3))
 
 ;; Question : Who closes the channels ?
 
-;; Pattern C : Sender(s) (those putting data on channel closes the channel).
+;; Principle : Sender(s) (those putting data on channel) closes the channel.
 ;; Usually who creates the channels will be putting values on channel
 ;; and will be best place to know when work is done.
 ;; Also, there will be multiple receivers (hopefully), as receivers are workers. Right !!!
