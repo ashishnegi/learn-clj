@@ -247,7 +247,7 @@
   ;; but sink closes after taking 3 nums..
   ;; this is the code using sink-channel.
   (assert
-   (> 6 ;; hopefully should stop before processing more than 6 args..
+   (> 6 ;; hopefully should stop before processing more than 6 args.. / can fail
       (count (loop [res []]
                (if-let [v (async/<!! sink-ch)]
                  (do (if (>= (count res) 3)
@@ -278,12 +278,11 @@
 ;; Building block #3
 ;; Bounded parallelism:
 ;; find-grep for a file : file name is number
-(let [num-routines 4
-      common-work-ch (async/chan num-routines)
-      done-ch (async/chan)
+(let [num-workers 4
+      common-work-ch (async/chan num-workers) ;; shared across all workers.
+      done-ch (async/chan) ;; yours donely.
       file-to-find 199
-      max-files 200
-      reschan (async/chan)]
+      max-files 200] ;; just magic no.. ignore
   (println "\n\n\n**********************")
   (let [look-in-dir-fn (fn [dir]
                          (println "in look-in-dir-fn: " dir)
@@ -301,43 +300,42 @@
                            ;; ideally we should return channel as this is most blocking part of code..
                            {:found has-file
                             :dirs dirs}))
+
         async-work5 (fn [done work-ch]
                       (println ">>>>>>>>> async-work5 <<<<<<<<<<<")
-                      (let [out-chan (async/chan 1)
-                            close-out-fn #(async/close! out-chan)]
+                      (let [out (async/chan 1)
+                            close-out-fn #(async/close! out)]
                         (async/go-loop []
                           (let [v (async/alt!
-                                    done ([v]
-                                          ;; done is used for only signalling done :P
-                                          (assert (nil? v))
-                                          (close-out-fn)
-                                          :done)
+                                    done ([_]
+                                          (close-out-fn))
                                     work-ch ([work]
                                              (if work
-                                               (async/alt!
-                                                 done ([_]
-                                                       (close-out-fn))
-                                                 [[out-chan (look-in-dir-fn work)]] :send)
+                                               (let [res (look-in-dir-fn work)]
+                                                 (async/alt!
+                                                   done ([_]
+                                                         (close-out-fn))
+                                                   [[out res]] :send))
                                                (close-out-fn))
                                              :recur))]
                             (if (= v :recur)
                               (recur)
                               (println ">>>>> stopping async-work5 instance <<<<<<"))))
-                        out-chan))
+                        out))
         all-chans (doall
                    (map (fn [_]
                           {:out-chan (async-work5 done-ch common-work-ch)
                            :in-chan common-work-ch})
-                        (range num-routines)))
+                        (range num-workers)))
         out-chan (async/merge (map :out-chan all-chans))
-
-        intermediate-ch (async/chan num-routines)]
+        ;; intermediate channel where each worker result creates a go-routine to put on this.
+        intermediate-ch (async/chan num-workers)]
 
     ;; read out-chan for the result..
     (async/go-loop [reqs-pending 1]
       (if (> reqs-pending 0)
         (do
-          (println "req-pending: " reqs-pending)
+          (println (str "req-pending: " reqs-pending))
           (if-let [res (async/<! out-chan)]
             (if (:found res)
               (do
@@ -353,21 +351,28 @@
                             :default :ongoing)]
                     (if (and (= v :ongoing) (seq? dirs))
                       (do
-                        (async/>! intermediate-ch (first dirs))
-                        (recur (rest dirs)))
+                        (async/alt!
+                          done-ch :done
+                          [[common-work-ch (first dirs)]] :send)
+                        (recur (next dirs)))
                       (println "closing go-loop for intermediate-ch"))))
                 (recur (+ reqs-pending (- (count (:dirs res)) 1)))))
             (println "done with out-chan")))
         (println "done with out-chan all reqs done")))
 
     (async/go-loop
-        [seen #{}]
-      (if-let [work (async/<! intermediate-ch)]
-        (if-not (contains? seen work)
-          (do
-            (async/>! common-work-ch work)
-            (recur (conj seen work)))
-          (recur seen))))
+        [seen #{}] ;; don't revist what we have already seen.
+      (async/alt!
+        done-ch :done
+        intermediate-ch ([work]
+                         (if work
+                           (if-not (contains? seen work)
+                             (do
+                               (async/alt!
+                                 done-ch :done
+                                 [[common-work-ch work]] :send)
+                               (recur (conj seen work)))
+                             (recur seen))))))
 
     ;; start from 0th directory
     (async/>!! common-work-ch 20)))
