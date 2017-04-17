@@ -1,5 +1,5 @@
-(ns joy-of-clojure.chap5-laziness-test
-  (:require [joy-of-clojure.chap5-laziness :as laz]
+(ns learn-clj.chap5-laziness-test
+  (:require [learn-clj.chap5-laziness :as laz]
             [clojure.test :as t]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]

@@ -1,3 +1,3 @@
-(ns joy-of-clojure.core-test
+(ns learn-clj.core-test
   (:require [clojure.test :refer :all]
-            [joy-of-clojure.core :refer :all]))
+            [learn-clj.core :refer :all]))

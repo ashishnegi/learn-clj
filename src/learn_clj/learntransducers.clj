@@ -1,4 +1,4 @@
-(ns joy-of-clojure.learntransducers)
+(ns learn-clj.learntransducers)
 
 ;; http://kukuruku.co/hub/funcprog/clojure-transducers-reducers-and-other-stuff
 
@@ -44,13 +44,13 @@
                    (xf acc val)
                    acc)))))
 
-;; joy-of-clojure.learntransducers> (time (r/fold + (r/folder v (take 100500))))
+;; learn-clj.learntransducers> (time (r/fold + (r/folder v (take 100500))))
 ;; "Elapsed time: 20.558038 msecs"
 ;; 122851357021
-;; joy-of-clojure.learntransducers> (time (r/fold + (eduction (take 100500) v)))
+;; learn-clj.learntransducers> (time (r/fold + (eduction (take 100500) v)))
 ;; "Elapsed time: 18.431962 msecs"
 ;; 5050074750
-;; joy-of-clojure.learntransducers> (time (reduce + 0 (take 100500 v)))
+;; learn-clj.learntransducers> (time (reduce + 0 (take 100500 v)))
 ;; "Elapsed time: 14.029671 msecs"
 ;; 5050074750
 

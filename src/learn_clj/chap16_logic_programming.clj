@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap16-logic-programming
+(ns learn-clj.chap16-logic-programming
   (:require [clojure.core.logic :as logic]
             [clojure.core.logic.fd :as fd]
             [clojure.set :as set]))

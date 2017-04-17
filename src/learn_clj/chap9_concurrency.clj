@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap9-concurrency
+(ns learn-clj.chap9-concurrency
   (:import [java.lang Thread]))
 
 (defn slow-fast-stm [r]

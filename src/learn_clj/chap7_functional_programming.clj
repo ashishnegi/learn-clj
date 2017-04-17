@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap7-functional-programming)
+(ns learn-clj.chap7-functional-programming)
 
 (defn gcd-recursive [a b]
   (if (= a 0)

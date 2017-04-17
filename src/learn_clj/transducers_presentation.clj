@@ -1,4 +1,4 @@
-(ns joy-of-clojure.transducers-presentation
+(ns learn-clj.transducers-presentation
   (:require [clojure.core.async :as async]))
 
 ;; Hello :)
@@ -30,7 +30,7 @@
 
 ;; so.. what happens if data now comes from a channel.
 (def my-chan (async/chan 100)) ;; buffer of 100
-;; => #'joy-of-clojure.transducers-presentation/my-chan
+;; => #'learn-clj.transducers-presentation/my-chan
 (async/go-loop [i 0]
   (async/>! my-chan i)
   (if (< i 100)
@@ -97,7 +97,7 @@
             (conj res (f val)))
           []
           coll))
-;; => #'joy-of-clojure.transducers-presentation/my-map
+;; => #'learn-clj.transducers-presentation/my-map
 (= (my-map inc (range 100))
    (map    inc (range 100)))
 ;; => true
@@ -223,7 +223,7 @@
 
 ;; How this works with channels..
 (def chan-2 (async/chan 100 (my-filter-final even?))) ;; so this is where transducer/our-algorithm is passed
-;; => #'joy-of-clojure.transducers-presentation/chan-2
+;; => #'learn-clj.transducers-presentation/chan-2
 (async/onto-chan chan-2 (range 100))
 
 ;; this is code for reduce / final value..
@@ -285,7 +285,7 @@
 (def mapxfc (map inc)) ;; g
 
 (def xform (comp filterxfc mapxfc)) ;; (comp f g) ;; (f (g x)
-;; => #'joy-of-clojure.transducers-presentation/rf
+;; => #'learn-clj.transducers-presentation/rf
 (def rf +)
 ;; => #function[clojure.core/filter$fn--4808$fn--4809]
 (xform rf)

@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap11-parallelism)
+(ns learn-clj.chap11-parallelism)
 
 (defn- sleeper [thing]
   (java.lang.Thread/sleep 1000)

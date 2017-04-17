@@ -1,5 +1,5 @@
-(ns joy-of-clojure.chap7-functional-programming-test
-  (:require [joy-of-clojure.chap7-functional-programming :as fp]
+(ns learn-clj.chap7-functional-programming-test
+  (:require [learn-clj.chap7-functional-programming :as fp]
             [clojure.test :as t]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]

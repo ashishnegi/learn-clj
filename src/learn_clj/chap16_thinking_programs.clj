@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap16-thinking-programs
+(ns learn-clj.chap16-thinking-programs
   (:require [clojure.set :as set]))
 
 (defmacro look [x]

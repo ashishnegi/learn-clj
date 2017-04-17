@@ -1,4 +1,4 @@
-(ns joy-of-clojure.ring-benchmark
+(ns learn-clj.ring-benchmark
   (:require [clojure.core.async :as async]))
 
 (defn spawn-relay-ch [prev n]
@@ -38,7 +38,7 @@
                      m)))))]
         (println i ": Messages " num-messages)))))
 
-;; joy-of-clojure git:(master) lein trampoline run -m joy-of-clojure.ring-benchmark 1000 1000
+;; learn-clj git:(master) lein trampoline run -m learn-clj.ring-benchmark 1000 1000
 ;; M:  1000  N:  1000
 ;; "Elapsed time: 4241.533446 msecs"
 ;; 0 : Messages  1000000

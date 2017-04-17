@@ -1,5 +1,5 @@
-(ns joy-of-clojure.chap17-way-of-thinking
-  (:require [joy-of-clojure.chap17-way-of-thinking :as sut]
+(ns learn-clj.chap17-way-of-thinking
+  (:require [learn-clj.chap17-way-of-thinking :as sut]
             [clojure.test :as t]))
 
 (t/deftest shuffle-expr-test

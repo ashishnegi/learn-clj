@@ -1,4 +1,4 @@
-# joy-of-clojure
+# learn-clj
 
 Clojure snippets written while reading beautiful book - Joy of CLojure.
 

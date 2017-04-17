@@ -1,5 +1,5 @@
-(ns joy-of-clojure.learntransducers-test
-  (:require [joy-of-clojure.learntransducers :as trans]
+(ns learn-clj.learntransducers-test
+  (:require [learn-clj.learntransducers :as trans]
             [clojure.test :as t]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]

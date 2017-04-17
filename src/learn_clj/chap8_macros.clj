@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap8-macros
+(ns learn-clj.chap8-macros
   [:require [clojure.xml :as xml]])
 
 (macroexpand '(when true true))
@@ -21,9 +21,9 @@
   (println `~y)
   (println ``~~y))
 ;; => nil
-;; joy-of-clojure.chap8-macros/y
-;; (quote joy-of-clojure.chap8-macros/y)
-;; joy-of-clojure.chap8-macros/y
+;; learn-clj.chap8-macros/y
+;; (quote learn-clj.chap8-macros/y)
+;; learn-clj.chap8-macros/y
 ;; (- x)
 ;; (- x)
 

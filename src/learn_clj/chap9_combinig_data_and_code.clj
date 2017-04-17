@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap9-combinig-data-and-code)
+(ns learn-clj.chap9-combinig-data-and-code)
 
 (defprotocol FIXO
   ;; First In X Out
@@ -35,7 +35,7 @@
       (Tree. v nil nil)))
 
 (def tree (Tree. 10 nil nil))
-;; => #'joy-of-clojure.chap9-combinig-data-and-code/tree
+;; => #'learn-clj.chap9-combinig-data-and-code/tree
 
 (seq tree)
 ;; => (10)

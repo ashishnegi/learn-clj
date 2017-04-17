@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap17-way-of-thinking
+(ns learn-clj.chap17-way-of-thinking
   (:require [clojure.string :as str]))
 
 (defn shuffle-expr [expr]

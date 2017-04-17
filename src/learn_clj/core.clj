@@ -1,4 +1,4 @@
-(ns joy-of-clojure.core)
+(ns learn-clj.core)
 
 ;; Tips here
 

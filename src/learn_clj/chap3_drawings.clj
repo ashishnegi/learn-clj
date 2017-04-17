@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap3-drawings)
+(ns learn-clj.chap3-drawings)
 
 ;; Before running the below code, resize your editor window to 80 % of
 ;; the screen towards the right side. Otherwie, we would not be able to

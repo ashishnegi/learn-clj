@@ -1,4 +1,4 @@
-(ns joy-of-clojure.chap5-laziness)
+(ns learn-clj.chap5-laziness)
 
 (set! *print-length* 100)
 ;;=> 100
