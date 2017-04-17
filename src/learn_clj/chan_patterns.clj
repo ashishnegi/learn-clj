@@ -285,7 +285,7 @@
       max-files 200] ;; just magic no.. ignore
   (println "\n\n\n**********************")
   (let [look-in-dir-fn (fn [dir]
-                         (println "in look-in-dir-fn: " dir)
+                         ;;(println "in look-in-dir-fn: " dir)
                          (let [all (->> (iterate (fn [_]
                                                    (int (* (rand) max-files)))
                                                  dir)
@@ -324,58 +324,53 @@
                         out))
         all-chans (doall
                    (map (fn [_]
-                          {:out-chan (async-work5 done-ch common-work-ch)
-                           :in-chan common-work-ch})
+                          {:out-chan (async-work5 done-ch common-work-ch)})
                         (range num-workers)))
         out-chan (async/merge (map :out-chan all-chans))
         ;; intermediate channel where each worker result creates a go-routine to put on this.
-        intermediate-ch (async/chan num-workers)]
+        intermediate-ch (async/chan num-workers)
+        start-dir 20]
 
     ;; read out-chan for the result..
-    (async/go-loop [reqs-pending 1]
-      (if (> reqs-pending 0)
-        (do
-          (println (str "req-pending: " reqs-pending))
-          (if-let [res (async/<! out-chan)]
-            (if (:found res)
-              (do
-                (println "***found***")
-                (async/close! done-ch))
-              (do
-                (println "creating another go-loop for intermediate-ch")
-                ;; put on common-work-ch in separate go-routine.
-                (async/go-loop
-                    [dirs (:dirs res)]
-                  (let [v (async/alt!
-                            done-ch :done
-                            :default :ongoing)]
-                    (if (and (= v :ongoing) (seq? dirs))
-                      (do
-                        (async/alt!
-                          done-ch :done
-                          [[common-work-ch (first dirs)]] :send)
-                        (recur (next dirs)))
-                      (println "closing go-loop for intermediate-ch"))))
-                (recur (+ reqs-pending (- (count (:dirs res)) 1)))))
-            (println "done with out-chan")))
-        (println "done with out-chan all reqs done")))
+    (async/go-loop []
+      (if-let [res (async/<! out-chan)]
+        (if (:found res)
+          (do
+            (println "***found***")
+            (async/close! done-ch))
+          (do
+            (if-not (empty? (:dirs res))
+              (async/alt!
+                done-ch :done
+                [[intermediate-ch (:dirs res)]] :send))
+            (recur)))))
 
     (async/go-loop
-        [seen #{}] ;; don't revist what we have already seen.
-      (async/alt!
-        done-ch :done
-        intermediate-ch ([work]
-                         (if work
-                           (if-not (contains? seen work)
-                             (do
-                               (async/alt!
-                                 done-ch :done
-                                 [[common-work-ch work]] :send)
-                               (recur (conj seen work)))
-                             (recur seen))))))
+        [seen #{start-dir}  ;; don't revist what we have already seen.
+         num-pending-reqs 1]
+      (println (str "req-pending: " num-pending-reqs))
+      (if (> num-pending-reqs 0)
+        (async/alt!
+          done-ch :done
+          intermediate-ch
+          ([works]
+           (let [unseen (clojure.set/difference (set works) seen)]
+             (if-not (empty? unseen)
+               (do
+                 (doall (map (fn [work]
+                               (async/go
+                                 (async/alt!
+                                   done-ch :done
+                                   [[common-work-ch work]] :send)))
+                             unseen))
+                 (recur (into seen unseen)
+                        (+ num-pending-reqs (- (count unseen) 1))))
+               (recur seen
+                      (- num-pending-reqs 1))))))
+        (println "done with out-chan all reqs done")))
 
     ;; start from 0th directory
-    (async/>!! common-work-ch 20)))
+    (async/>!! common-work-ch start-dir)))
 
 ;; value more than 199 require a map to stop processing directories
 ;; we have already seen
