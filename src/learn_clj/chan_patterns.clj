@@ -289,7 +289,7 @@
                          (let [all (->> (iterate (fn [_]
                                                    (int (* (rand) max-files)))
                                                  dir)
-                                        (take dir))
+                                        (take (+ dir 1)))
                                dirs (->> all
                                          (filter #(>= 100 %)))
                                has-file (->> all
@@ -367,10 +367,11 @@
                         (+ num-pending-reqs (- (count unseen) 1))))
                (recur seen
                       (- num-pending-reqs 1))))))
-        (println "done with out-chan all reqs done")))
+        (async/close! done-ch)))
 
     ;; start from 0th directory
     (async/>!! common-work-ch start-dir)))
 
 ;; value more than 199 require a map to stop processing directories
 ;; we have already seen
+;; tl;dr use alt! a lot :P
