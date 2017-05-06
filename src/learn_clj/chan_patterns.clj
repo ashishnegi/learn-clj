@@ -58,10 +58,13 @@
 ;; we want to put queues between different subsystems of our program
 ;; so that each becomes independent => we gain swapability ; easy debugging ; resource allocation.
 
-;; Things to remember : async code always returns channel.
+;; Things to remember : async code always returns channel. :
+;; you talk in languages of channels..
 ;; above code becomes :
 (defn blocking-async [& args]
   (let [ch (async/chan 1)] ;; don't want to block myself if no one is taking.
+    ;; dont call any blocking operation directly in go-routine..
+    ;; use some api that returns channels.. like networking apis.. / file read write apis..
     (async/go (async/>! ch (apply blocking-work args)))
     ch))
 
@@ -166,12 +169,12 @@
 ;; In some languages, closing a channel multiple times throws.
 ;; This leads to good programming habits.
 ;; Not in clojure
+;; but remember if you follow the principles.. pattern will emerge..
 (def to-close-chan (async/chan))
 (async/close! to-close-chan)
 (async/close! to-close-chan)
 
 ;; --------------------- Building blocks ---------------------------------------------
-;; inspired from :
 
 ;; Building block : Pipeline :
 (do
@@ -250,6 +253,8 @@
    (> 6 ;; hopefully should stop before processing more than 6 args.. / can fail
       (count (loop [res []]
                (if-let [v (async/<!! sink-ch)]
+                 ;; we stop after taking 3 values
+                 ;; and pray that go-threads will stop before we take total 6 values..
                  (do (if (>= (count res) 3)
                        (async/close! done))
                      (recur (conj res v)))
@@ -277,13 +282,13 @@
 
 ;; Building block #3
 ;; Bounded parallelism:
-;; find-grep for a file : file name is number
+;; find a file : file name is number
 (let [num-workers 4
       common-work-ch (async/chan num-workers) ;; shared across all workers.
       done-ch (async/chan) ;; yours donely.
       file-to-find 199
       max-files 200] ;; just magic no.. ignore
-  (println "\n\n\n**********************")
+  (println "\n\n\n\n\n********")
   (let [look-in-dir-fn (fn [dir]
                          ;;(println "in look-in-dir-fn: " dir)
                          (let [all (->> (iterate (fn [_]
@@ -302,7 +307,7 @@
                             :dirs dirs}))
 
         async-work5 (fn [done work-ch]
-                      (println ">>>>>>>>> async-work5 <<<<<<<<<<<")
+                      (println "async-work5 started..")
                       (let [out (async/chan 1)
                             close-out-fn #(async/close! out)]
                         (async/go-loop []
@@ -320,7 +325,7 @@
                                              :recur))]
                             (if (= v :recur)
                               (recur)
-                              (println ">>>>> stopping async-work5 instance <<<<<<"))))
+                              (println "async-work5 stopped"))))
                         out))
         all-chans (doall
                    (map (fn [_]
@@ -349,7 +354,7 @@
         [seen #{start-dir}  ;; don't revist what we have already seen.
          num-pending-reqs 1]
       (println (str "req-pending: " num-pending-reqs))
-      (if (> num-pending-reqs 0)
+      (if (> num-pending-reqs 0) ;; drain out all the waiting channels..
         (async/alt!
           done-ch :done
           intermediate-ch
@@ -367,6 +372,7 @@
                         (+ num-pending-reqs (- (count unseen) 1))))
                (recur seen
                       (- num-pending-reqs 1))))))
+        ;; if we could not find the file, then close all operations.
         (async/close! done-ch)))
 
     ;; start from 0th directory
@@ -375,3 +381,18 @@
 ;; value more than 199 require a map to stop processing directories
 ;; we have already seen
 ;; tl;dr use alt! a lot :P
+
+;; Another problem is : How to know when things have finished ?
+
+
+;; multiple senders..
+;;    put on one channel
+;; multiple receivers..
+;;    take from that channel
+;; all receivers output merged into one sink channel..
+;;    when sink does not want more..
+;;    closes done channel shared with senders
+;;    who closes their downstream channels and so on..
+
+;; when all senders close..
+;;    common channel is closed..
